@@ -6,11 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/replicate/cog/pkg/config"
-	"github.com/replicate/cog/pkg/docker"
-	"github.com/replicate/cog/pkg/global"
-	"github.com/replicate/cog/pkg/image"
-	"github.com/replicate/cog/pkg/util/console"
+	"github.com/sieve-data/cog/pkg/config"
+	"github.com/sieve-data/cog/pkg/docker"
+	"github.com/sieve-data/cog/pkg/global"
+	"github.com/sieve-data/cog/pkg/image"
+	"github.com/sieve-data/cog/pkg/util/console"
 )
 
 func newPushCommand() *cobra.Command {

@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/replicate/cog/pkg/util"
-	"github.com/replicate/cog/pkg/util/console"
+	"github.com/sieve-data/cog/pkg/util"
+	"github.com/sieve-data/cog/pkg/util/console"
 )
 
 func Build(dir, dockerfile, imageName string, progressOutput string) error {

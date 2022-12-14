@@ -8,10 +8,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/replicate/cog/pkg/util"
-	"github.com/replicate/cog/pkg/util/console"
+	"github.com/sieve-data/cog/pkg/util"
+	"github.com/sieve-data/cog/pkg/util/console"
 
-	"github.com/replicate/cog/pkg/util/version"
+	"github.com/sieve-data/cog/pkg/util/version"
 )
 
 // TODO(andreas): check tf/py versions. tf 1.5.0 didn't install on py 3.8
