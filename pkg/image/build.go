@@ -13,6 +13,7 @@ import (
 //
 // This is separated out from docker.Build(), so that can be as close as possible to the behavior of 'docker build'.
 func Build(cfg *config.Config, dir, imageName string, progressOutput string) error {
+	cfg.ValidateAndCompleteCUDA()
 	console.Infof("Building Docker image from environment in cog.yaml as %s...", imageName)
 
 	generator, err := dockerfile.NewGenerator(cfg, dir)

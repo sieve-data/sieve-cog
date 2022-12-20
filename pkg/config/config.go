@@ -126,7 +126,7 @@ func (c *Config) ValidateAndCompleteConfig() error {
 	}
 
 	if c.Build.GPU {
-		if err := c.validateAndCompleteCUDA(); err != nil {
+		if err := c.ValidateAndCompleteCUDA(); err != nil {
 			return err
 		}
 	}
@@ -203,7 +203,7 @@ func (c *Config) pythonPackageForArch(pkg string, goos string, goarch string) (a
 	return pkgWithVersion, indexURL, nil
 }
 
-func (c *Config) validateAndCompleteCUDA() error {
+func (c *Config) ValidateAndCompleteCUDA() error {
 	if c.Build.CUDA != "" && c.Build.CuDNN != "" {
 		compatibleCuDNNs := compatibleCuDNNsForCUDA(c.Build.CUDA)
 		if !sliceContains(compatibleCuDNNs, c.Build.CuDNN) {
