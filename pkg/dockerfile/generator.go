@@ -102,6 +102,7 @@ func (g *Generator) GenerateBase() (string, error) {
 		pythonRequirements,
 		pipInstalls,
 		g.installSieve(),
+		g.uninstallPydantic(),
 		g.installPydanticNoBinary(),
 		run,
 		`WORKDIR /src`,
@@ -211,7 +212,11 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s`, path.Join(g
 }
 
 func (g *Generator) installPydanticNoBinary() string {
-	return "RUN --mount=type=cache,target=/root/.cache/pip pip uninstall pydantic -y && --mount=type=cache,target=/root/.cache/pip pip install pydantic --no-binary :all:"
+	return "RUN --mount=type=cache,target=/root/.cache/pip pip install pydantic --no-binary :all:"
+}
+
+func (g *Generator) uninstallPydantic() string {
+	return "RUN --mount=type=cache,target=/root/.cache/pip pip uninstall pydantic -y"
 }
 
 func (g *Generator) installCython() string {
