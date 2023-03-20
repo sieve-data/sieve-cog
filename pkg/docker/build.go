@@ -14,19 +14,20 @@ import (
 
 func Build(dir, dockerfile, imageName string, progressOutput string, writer io.Writer) error {
 	var args []string
-	if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
-		args = m1BuildxBuildArgs()
-	} else {
-		args = buildKitBuildArgs()
-	}
-	args = append(args,
-		"--file", "-",
-		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
-		"--tag", imageName,
-		"--progress", progressOutput,
-		".",
-	)
-	cmd := exec.Command("docker", args...)
+	// if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
+	// 	args = m1BuildxBuildArgs()
+	// } else {
+	// 	args = buildKitBuildArgs()
+	// }
+	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageName}
+	// args = append(args,
+	// 	// "--file", "-",
+	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
+	// 	// "--tag", imageName,
+	// 	// "--progress", progressOutput,
+	// 	// ".",
+	// )
+	cmd := exec.Command("gcloud", args...)
 	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
 	cmd.Dir = dir
 	cmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
@@ -74,5 +75,5 @@ func m1BuildxBuildArgs() []string {
 }
 
 func buildKitBuildArgs() []string {
-	return []string{"build"}
+	return []string{"buildx", "build", "--platform", "linux/amd64", "--load", "--cache-to", "type=registry,ref=us-central1-docker.pkg.dev/sieve-data/cog/cog-cache:latest"}
 }
