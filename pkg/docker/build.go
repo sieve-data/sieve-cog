@@ -3,13 +3,10 @@ package docker
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
-
-	"log"
 
 	"github.com/sieve-data/cog/pkg/util"
 	"github.com/sieve-data/cog/pkg/util/console"
@@ -17,19 +14,10 @@ import (
 
 func Build(dir, dockerfile, imageName string, progressOutput string, writer io.Writer) error {
 
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "dockerfile-")
+	// write dockerfile to dir
+	err := os.WriteFile(dir+"/Dockerfile", []byte(dockerfile), 0644)
 	if err != nil {
-		log.Fatal("Cannot create temporary file", err)
-	}
-
-	defer os.Remove(tmpFile.Name()) // clean up
-
-	if _, err := tmpFile.Write([]byte(dockerfile)); err != nil {
-		log.Fatal("Failed to write to temporary file", err)
-	}
-
-	if err := tmpFile.Close(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	var args []string
@@ -38,7 +26,7 @@ func Build(dir, dockerfile, imageName string, progressOutput string, writer io.W
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageName, "--dockerfile", tmpFile.Name()}
+	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageName}
 	// args = append(args,
 	// 	// "--file", "-",
 	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
