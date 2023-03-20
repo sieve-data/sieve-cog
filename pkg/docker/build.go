@@ -3,23 +3,42 @@ package docker
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"log"
 
 	"github.com/sieve-data/cog/pkg/util"
 	"github.com/sieve-data/cog/pkg/util/console"
 )
 
 func Build(dir, dockerfile, imageName string, progressOutput string, writer io.Writer) error {
+
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "dockerfile-")
+	if err != nil {
+		log.Fatal("Cannot create temporary file", err)
+	}
+
+	defer os.Remove(tmpFile.Name()) // clean up
+
+	if _, err := tmpFile.Write([]byte(dockerfile)); err != nil {
+		log.Fatal("Failed to write to temporary file", err)
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
 	var args []string
 	// if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
 	// 	args = m1BuildxBuildArgs()
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageName}
+	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageName, "--dockerfile", tmpFile.Name()}
 	// args = append(args,
 	// 	// "--file", "-",
 	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
@@ -32,7 +51,6 @@ func Build(dir, dockerfile, imageName string, progressOutput string, writer io.W
 	cmd.Dir = dir
 	cmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
 	cmd.Stderr = writer
-	cmd.Stdin = strings.NewReader(dockerfile)
 
 	console.Debug("$ " + strings.Join(cmd.Args, " "))
 	return cmd.Run()
