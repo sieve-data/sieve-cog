@@ -8,15 +8,39 @@ import (
 	"runtime"
 	"strings"
 
+	"io/ioutil"
+
 	"github.com/sieve-data/cog/pkg/util"
 	"github.com/sieve-data/cog/pkg/util/console"
 )
 
-func Build(dir, dockerfile, imageName string, progressOutput string, writer io.Writer) error {
+func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer) error {
 
 	// write dockerfile to dir
 	err := os.WriteFile(dir+"/Dockerfile", []byte(dockerfile), 0644)
 	if err != nil {
+		return err
+	}
+
+	imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
+
+	cloudbuildYaml := fmt.Sprintf(
+		`steps:
+		- name: 'gcr.io/cloud-builders/docker'
+		args: ['build', '-t', '%s', '.', "--cache-from", '%s']
+		images:
+		- '%s'
+		`, imageUrl, imageLatest, imageUrl)
+
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "cloudbuild.yaml")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Write([]byte(cloudbuildYaml))
+
+	// close the file
+	if err := tmpFile.Close(); err != nil {
 		return err
 	}
 
@@ -26,7 +50,7 @@ func Build(dir, dockerfile, imageName string, progressOutput string, writer io.W
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageName}
+	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageUrl, "--config", tmpFile.Name()}
 	// args = append(args,
 	// 	// "--file", "-",
 	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
