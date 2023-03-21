@@ -68,6 +68,17 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	return cmd.Run()
 }
 
+func BuildAndPush(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer) error {
+	err := Build(dir, dockerfile, imageUrl, progressOutput, writer)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("docker", "push", imageUrl)
+	cmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
+	cmd.Stderr = writer
+	return cmd.Run()
+}
+
 func BuildAddLabelsToImage(image string, labels map[string]string) error {
 	dockerfile := "FROM " + image
 	var args []string
