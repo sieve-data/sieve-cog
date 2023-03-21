@@ -51,7 +51,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"build", "--project", depotProjectId, "us-central1", "-t", imageUrl, ".", "--push"}
+	args = []string{"build", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	// args = append(args,
 	// 	// "--file", "-",
 	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
