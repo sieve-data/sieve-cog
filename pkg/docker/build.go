@@ -22,15 +22,17 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		return err
 	}
 
-	imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
+	// imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
+
+	depotToken := "depot_project_690526a1d60f58cf2a9563a9faa6fd32319f42997bcc389dea0a7585bbfc01d8"
 
 	cloudbuildYaml := fmt.Sprintf(
 		`steps:
-		- name: 'gcr.io/cloud-builders/docker'
-		args: ['build', '-t', '%s', '.', "--cache-from", '%s']
-		images:
-		- '%s'
-		`, imageUrl, imageLatest, imageUrl)
+		- name: 'ghcr.io/depot/cli:latest'
+		env: 
+		   - DEPOT_TOKEN=%s
+		args: ['build', '--project', 'zz1b68kjbv', '-t', '%s', '.', "--push"]
+		`, depotToken, imageUrl)
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "cloudbuild.yaml")
 	if err != nil {
@@ -50,7 +52,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"builds", "submit", "--region", "us-central1", "--tag", imageUrl, "--config", tmpFile.Name()}
+	args = []string{"builds", "submit", "--region", "us-central1", "--config", tmpFile.Name()}
 	// args = append(args,
 	// 	// "--file", "-",
 	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
