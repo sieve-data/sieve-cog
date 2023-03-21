@@ -55,6 +55,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		"--tag", imageUrl,
 		"--progress", progressOutput,
 		".",
+		"--push",
 	)
 	cmd := exec.Command("docker", args...)
 	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
@@ -104,5 +105,5 @@ func m1BuildxBuildArgs() []string {
 }
 
 func buildKitBuildArgs() []string {
-	return []string{"buildx", "build", "--platform", "linux/amd64", "--load", "--push"}
+	return []string{"buildx", "build", "--platform", "linux/amd64"}
 }
