@@ -15,15 +15,12 @@ import (
 func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer) error {
 
 	// write dockerfile to dir
-	err := os.WriteFile(dir+"/Dockerfile", []byte(dockerfile), 0644)
-	if err != nil {
-		return err
-	}
+	// err := os.WriteFile(dir+"/Dockerfile", []byte(dockerfile), 0644)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
-
-	depotToken := "depot_project_690526a1d60f58cf2a9563a9faa6fd32319f42997bcc389dea0a7585bbfc01d8"
-	depotProjectId := "zz1b68kjbv"
 
 	// cloudbuildYaml := fmt.Sprintf(
 	// `steps:
@@ -51,19 +48,20 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"build", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
-	// args = append(args,
-	// 	// "--file", "-",
-	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
-	// 	// "--tag", imageName,
-	// 	// "--progress", progressOutput,
-	// 	// ".",
-	// )
-	cmd := exec.Command("depot", args...)
-	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1", "DEPOT_TOKEN="+depotToken)
+	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
+	args = append(args,
+		"--file", "-",
+		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
+		"--tag", imageUrl,
+		"--progress", progressOutput,
+		".",
+	)
+	cmd := exec.Command("docker", args...)
+	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
 	cmd.Dir = dir
 	cmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
 	cmd.Stderr = writer
+	cmd.Stdin = strings.NewReader(dockerfile)
 
 	console.Debug("$ " + strings.Join(cmd.Args, " "))
 	return cmd.Run()
@@ -106,5 +104,5 @@ func m1BuildxBuildArgs() []string {
 }
 
 func buildKitBuildArgs() []string {
-	return []string{"buildx", "build", "--platform", "linux/amd64", "--load", "--cache-to", "type=registry,ref=us-central1-docker.pkg.dev/sieve-data/cog/cog-cache:latest"}
+	return []string{"buildx", "build", "--platform", "linux/amd64", "--load", "--push"}
 }
