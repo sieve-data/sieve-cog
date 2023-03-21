@@ -26,13 +26,15 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 
 	depotToken := "depot_project_690526a1d60f58cf2a9563a9faa6fd32319f42997bcc389dea0a7585bbfc01d8"
 
+	cloudbuildYamlAppend := ""
+
 	cloudbuildYaml := fmt.Sprintf(
-		`steps:
-		- name: 'ghcr.io/depot/cli:latest'
-		env: 
-		   - DEPOT_TOKEN=%s
-		args: ['build', '--project', 'zz1b68kjbv', '-t', '%s', '.', "--push"]
-		`, depotToken, imageUrl)
+	`steps:
+     - name: 'ghcr.io/depot/cli:latest'
+       env: 
+        - DEPOT_TOKEN=%s
+       args: ['build', '--project', 'zz1b68kjbv', '-t', '%s', '.', "--push"]
+    `, depotToken, imageUrl)
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "cloudbuild.yaml")
 	if err != nil {
