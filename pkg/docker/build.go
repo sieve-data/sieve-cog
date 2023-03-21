@@ -8,8 +8,6 @@ import (
 	"runtime"
 	"strings"
 
-	"io/ioutil"
-
 	"github.com/sieve-data/cog/pkg/util"
 	"github.com/sieve-data/cog/pkg/util/console"
 )
@@ -25,26 +23,27 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
 
 	depotToken := "depot_project_690526a1d60f58cf2a9563a9faa6fd32319f42997bcc389dea0a7585bbfc01d8"
+	depotProjectId := "zz1b68kjbv"
 
-	cloudbuildYaml := fmt.Sprintf(
-	`steps:
-     - name: 'ghcr.io/depot/cli:latest'
-       env: 
-        - DEPOT_TOKEN=%s
-       args: ['build', '--project', 'zz1b68kjbv', '-t', '%s', '.', "--push"]
-    `, depotToken, imageUrl)
+	// cloudbuildYaml := fmt.Sprintf(
+	// `steps:
+	//  - name: 'ghcr.io/depot/cli:latest'
+	//    env:
+	//     - DEPOT_TOKEN=%s
+	//    args: ['build', '--project', 'zz1b68kjbv', '-t', '%s', '.', "--push"]
+	// `, depotToken, imageUrl)
 
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "cloudbuild.yaml")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Write([]byte(cloudbuildYaml))
+	// tmpFile, err := ioutil.TempFile(os.TempDir(), "cloudbuild.yaml")
+	// if err != nil {
+	// 	return err
+	// }
+	// defer os.Remove(tmpFile.Name())
+	// tmpFile.Write([]byte(cloudbuildYaml))
 
-	// close the file
-	if err := tmpFile.Close(); err != nil {
-		return err
-	}
+	// // close the file
+	// if err := tmpFile.Close(); err != nil {
+	// 	return err
+	// }
 
 	var args []string
 	// if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
@@ -52,7 +51,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
-	args = []string{"builds", "submit", "--region", "us-central1", "--config", tmpFile.Name()}
+	args = []string{"build", "--project", depotProjectId, "us-central1", "-t", imageUrl, ".", "--push"}
 	// args = append(args,
 	// 	// "--file", "-",
 	// 	// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
@@ -60,8 +59,8 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// 	// "--progress", progressOutput,
 	// 	// ".",
 	// )
-	cmd := exec.Command("gcloud", args...)
-	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
+	cmd := exec.Command("depot", args...)
+	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1", "DEPOT_TOKEN="+depotToken)
 	cmd.Dir = dir
 	cmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
 	cmd.Stderr = writer
