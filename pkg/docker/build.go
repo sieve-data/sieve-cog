@@ -50,6 +50,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// }
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
+		"--push",
 		"--file", "-",
 		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--tag", imageUrl,
@@ -57,7 +58,6 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		"--cache-from", "type=registry,ref="+imageLatest,
 		"--cache-to", "type=registry,ref="+imageLatest+",mode=max",
 		".",
-		"--push",
 	)
 	cmd := exec.Command("docker", args...)
 	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
@@ -114,7 +114,7 @@ func BuildAddLabelsToImage(image string, labels map[string]string) error {
 }
 
 func m1BuildxBuildArgs() []string {
-	return []string{"buildx", "build", "--platform", "linux/amd64", "--load"}
+	return []string{"buildx", "build", "--platform", "linux/amd64"}
 }
 
 func buildKitBuildArgs() []string {
