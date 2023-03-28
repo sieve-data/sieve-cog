@@ -52,7 +52,6 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	args = append(args,
 		"--push",
 		"--file", "-",
-		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--tag", imageUrl,
 		"--progress", progressOutput,
 		"--cache-from", "type=registry,ref="+imageLatest,
