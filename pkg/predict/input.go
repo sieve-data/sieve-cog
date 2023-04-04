@@ -1,7 +1,6 @@
 package predict
 
 import (
-	"mime"
 	"os"
 	"path/filepath"
 	"strings"
