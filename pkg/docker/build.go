@@ -20,7 +20,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// 	return err
 	// }
 
-	imageLatest := strings.Split(imageUrl, ":")[0]
+	imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
 
 	// cloudbuildYaml := fmt.Sprintf(
 	// `steps:
@@ -60,6 +60,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
 		"--tag", imageUrl,
+		"--tag", imageLatest,
 		"--progress", progressOutput,
 		"--cache-from", imageLatest,
 		".",
