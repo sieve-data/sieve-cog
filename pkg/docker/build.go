@@ -42,6 +42,12 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// 	return err
 	// }
 
+	pullCommand := []string{"docker", "pull", imageLatest}
+	pullcmd := exec.Command(pullCommand[0], pullCommand[1:]...)
+	pullcmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
+	pullcmd.Stderr = writer
+	pullcmd.Run()
+
 	var args []string
 	// if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
 	// 	args = m1BuildxBuildArgs()
@@ -51,11 +57,10 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
 		"--push",
+		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
 		"--tag", imageUrl,
 		"--progress", progressOutput,
-		"--cache-from", "type=registry,ref="+imageLatest,
-		"--cache-to", "type=registry,ref="+imageLatest+",mode=max",
 		".",
 	)
 	cmd := exec.Command("docker", args...)
@@ -117,5 +122,5 @@ func m1BuildxBuildArgs() []string {
 }
 
 func buildKitBuildArgs() []string {
-	return []string{"buildx", "build", "--platform", "linux/amd64"}
+	return []string{"buildx", "build", "--platform", "linux/amd64", "--load"}
 }
