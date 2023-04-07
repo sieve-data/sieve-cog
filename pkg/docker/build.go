@@ -61,6 +61,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		"--file", "-",
 		"--tag", imageUrl,
 		"--progress", progressOutput,
+		"--cache-from", imageLatest,
 		".",
 	)
 	cmd := exec.Command("docker", args...)
