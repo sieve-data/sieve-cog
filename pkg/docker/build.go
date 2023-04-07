@@ -20,7 +20,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// 	return err
 	// }
 
-	imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
+	imageLatest := strings.Split(imageUrl, ":")[0]
 
 	// cloudbuildYaml := fmt.Sprintf(
 	// `steps:
