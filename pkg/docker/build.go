@@ -56,7 +56,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// }
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
-		"--load",
+		// "--load",
 		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
 		"--tag", imageUrl,
@@ -142,5 +142,5 @@ func m1BuildxBuildArgs() []string {
 }
 
 func buildKitBuildArgs() []string {
-	return []string{"buildx", "build", "--platform", "linux/amd64"}
+	return []string{"build", "--platform", "linux/amd64"}
 }
