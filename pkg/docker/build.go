@@ -42,11 +42,11 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// 	return err
 	// }
 
-	pullCommand := []string{"docker", "pull", imageLatest}
-	pullcmd := exec.Command(pullCommand[0], pullCommand[1:]...)
-	pullcmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
-	pullcmd.Stderr = writer
-	pullcmd.Run()
+	// pullCommand := []string{"docker", "pull", imageLatest}
+	// pullcmd := exec.Command(pullCommand[0], pullCommand[1:]...)
+	// pullcmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
+	// pullcmd.Stderr = writer
+	// pullcmd.Run()
 
 	var args []string
 	// if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
@@ -56,13 +56,13 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// }
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
-		"--push",
+		"--load",
 		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
 		"--tag", imageUrl,
 		"--tag", imageLatest,
 		"--progress", progressOutput,
-		"--cache-from", imageLatest,
+		// "--cache-from", imageLatest,
 		".",
 	)
 	cmd := exec.Command("docker", args...)
@@ -73,7 +73,25 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	cmd.Stdin = strings.NewReader(dockerfile)
 
 	console.Debug("$ " + strings.Join(cmd.Args, " "))
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	pushCommand := []string{"docker", "push", imageUrl}
+	pushcmd := exec.Command(pushCommand[0], pushCommand[1:]...)
+	pushcmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
+	pushcmd.Stderr = writer
+	err = pushcmd.Run()
+	if err != nil {
+		return err
+	}
+
+	pushCommand = []string{"docker", "push", imageLatest}
+	pushcmd = exec.Command(pushCommand[0], pushCommand[1:]...)
+	pushcmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
+	pushcmd.Stderr = writer
+	return pushcmd.Run()
 }
 
 func BuildAndPush(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer) error {
