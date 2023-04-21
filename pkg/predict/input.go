@@ -1,6 +1,7 @@
 package predict
 
 import (
+	"github.com/sieve-data/cog/pkg/util/mime"
 	"os"
 	"path/filepath"
 	"strings"
