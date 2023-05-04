@@ -56,11 +56,10 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// }
 	cache_from_images := []string{
 		imageLatest, 
-		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/instance-segmentation:latest",
-		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/deforum-video-inference-20gb:f0673249-f583-40c1-807f-790aa32f5bae",
-		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/frame-combiner:latest",
-		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/hello:latest",
-		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/video-splitter:latest",
+		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-2:latest",
+		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-8:latest",
+		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/ffmpeg-python:latest",
+		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/basic-python:latest",
 	}
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
