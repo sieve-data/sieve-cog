@@ -148,7 +148,7 @@ func (g *Generator) installTini() string {
 	// N.B. If you remove/change this, consider removing/changing the `has_init`
 	// image label applied in image/build.go.
 	lines := []string{
-		`RUN --mount=type=cache,target=/var/cache/apt set -eux; \
+		`RUN set -eux; \
 apt-get update -qq; \
 apt-get install -qqy --no-install-recommends curl; \
 rm -rf /var/lib/apt/lists/*; \
@@ -166,7 +166,7 @@ func (g *Generator) aptInstalls() (string, error) {
 	if len(packages) == 0 {
 		return "", nil
 	}
-	return "RUN --mount=type=cache,target=/var/cache/apt apt-get update -qq && apt-get install -qqy " +
+	return "RUN apt-get update -qq && apt-get install -qqy " +
 		strings.Join(packages, " ") +
 		" && rm -rf /var/lib/apt/lists/*", nil
 }
@@ -177,7 +177,7 @@ func (g *Generator) installPythonCUDA() (string, error) {
 	py := g.Config.Build.PythonVersion
 
 	return `ENV PATH="/root/.pyenv/shims:/root/.pyenv/bin:$PATH"
-RUN --mount=type=cache,target=/var/cache/apt apt-get update -qq && apt-get install -qqy --no-install-recommends \
+RUN apt-get update -qq && apt-get install -qqy --no-install-recommends \
 	make \
 	build-essential \
 	libssl-dev \
@@ -215,23 +215,23 @@ func (g *Generator) installCog() (string, error) {
 		return "", fmt.Errorf("Failed to write %s: %w", cogFilename, err)
 	}
 	return fmt.Sprintf(`COPY %s /tmp/%s
-RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s`, path.Join(g.relativeTmpDir, cogFilename), cogFilename, cogFilename), nil
+RUN pip install /tmp/%s`, path.Join(g.relativeTmpDir, cogFilename), cogFilename, cogFilename), nil
 }
 
 func (g *Generator) installPydanticNoBinary() string {
-	return "RUN --mount=type=cache,target=/root/.cache/pip pip install pydantic --no-binary :all:"
+	return "RUN pip install pydantic --no-binary :all:"
 }
 
 func (g *Generator) uninstallPydantic() string {
-	return "RUN --mount=type=cache,target=/root/.cache/pip pip uninstall pydantic -y"
+	return "RUN pip uninstall pydantic -y"
 }
 
 func (g *Generator) installCython() string {
-	return "RUN --mount=type=cache,target=/root/.cache/pip pip install cython"
+	return "RUN pip install cython"
 }
 func (g *Generator) installSieve() string {
 	sieveExternal := "sievedata-0.0.1.1-py3-none-any.whl"
-	format := "COPY %s /tmp/%s\n RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s"
+	format := "COPY %s /tmp/%s\n RUN pip install /tmp/%s"
 	line2 := fmt.Sprintf(format, sieveExternal, sieveExternal, sieveExternal)
 	return fmt.Sprintf("%s", line2)
 }
@@ -243,7 +243,7 @@ func (g *Generator) pythonRequirements() (string, error) {
 		return "", nil
 	}
 	return fmt.Sprintf(`COPY %s /tmp/requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqs), nil
+RUN pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqs), nil
 }
 
 func (g *Generator) pipInstalls() (string, error) {
@@ -260,7 +260,7 @@ func (g *Generator) pipInstalls() (string, error) {
 		return "", err
 	}
 
-	lines = append(lines, "RUN --mount=type=cache,target=/root/.cache/pip pip install -r "+containerPath)
+	lines = append(lines, "RUN pip install -r "+containerPath)
 	return strings.Join(lines, "\n"), nil
 }
 
