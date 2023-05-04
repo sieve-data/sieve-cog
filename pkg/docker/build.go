@@ -54,17 +54,29 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// } else {
 	// 	args = buildKitBuildArgs()
 	// }
+	cache_from_images := []string{
+		imageLatest, 
+		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/instance-segmentation:latest",
+		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/deforum-video-inference-20gb:f0673249-f583-40c1-807f-790aa32f5bae",
+		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/frame-combiner:latest",
+		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/hello:latest",
+		"us-central1-docker.pkg.dev/sieve-v1-development/sieve-v1-development-containers/video-splitter:latest",
+	}
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
 		// "--load",
-		// "--build-arg", "BUILDKIT_INLINE_CACHE=1",
+		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
 		"--tag", imageUrl,
 		"--tag", imageLatest,
 		"--progress", progressOutput,
-		// "--cache-from", imageLatest,
-		".",
 	)
+	for _, image := range cache_from_images {
+		args = append(args, "--cache-from", "type=registry,ref="+image)
+	}
+
+	args = append(args, ".")
+
 	cmd := exec.Command("docker", args...)
 	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
 	cmd.Dir = dir
