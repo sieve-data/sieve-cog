@@ -31,17 +31,12 @@ type Generator struct {
 }
 
 func NewGenerator(config *config.Config, dir string) (*Generator, error) {
-	rootTmp := path.Join(dir, ".cog/tmp")
+	rootTmp := path.Join(dir, ".cog/tmp/build")
 	if err := os.MkdirAll(rootTmp, 0o755); err != nil {
 		return nil, err
 	}
-	// tmpDir ends up being something like dir/.cog/tmp/build123456789
-	tmpDir, err := os.MkdirTemp(rootTmp, "build")
-	if err != nil {
-		return nil, err
-	}
 	// tmpDir, but without dir prefix. This is the path used in the Dockerfile.
-	relativeTmpDir, err := filepath.Rel(dir, tmpDir)
+	relativeTmpDir, err := filepath.Rel(dir, rootTmp)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +46,7 @@ func NewGenerator(config *config.Config, dir string) (*Generator, error) {
 		Dir:            dir,
 		GOOS:           runtime.GOOS,
 		GOARCH:         runtime.GOOS,
-		tmpDir:         tmpDir,
+		tmpDir:         rootTmp,
 		relativeTmpDir: relativeTmpDir,
 	}, nil
 }
