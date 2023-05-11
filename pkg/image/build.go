@@ -17,7 +17,7 @@ import (
 // Build a Cog model from a config
 //
 // This is separated out from docker.Build(), so that can be as close as possible to the behavior of 'docker build'.
-func Build(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer) error {
+func Build(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer) (string, error) {
 	console.Info(fmt.Sprint("cudav version before validate and complete", cfg.Build.CUDA))
 	cfg.ValidateAndCompleteCUDA()
 	console.Info(fmt.Sprint("cudav after before validate and complete", cfg.Build.CUDA))
@@ -25,7 +25,7 @@ func Build(cfg *config.Config, dir, imageName string, progressOutput string, wri
 
 	generator, err := dockerfile.NewGenerator(cfg, dir)
 	if err != nil {
-		return fmt.Errorf("Error creating Dockerfile generator: %w", err)
+		return "", fmt.Errorf("Error creating Dockerfile generator: %w", err)
 	}
 	defer func() {
 		if err := generator.Cleanup(); err != nil {
@@ -35,21 +35,21 @@ func Build(cfg *config.Config, dir, imageName string, progressOutput string, wri
 
 	dockerfileContents, err := generator.Generate()
 	if err != nil {
-		return fmt.Errorf("Failed to generate Dockerfile: %w", err)
+		return "", fmt.Errorf("Failed to generate Dockerfile: %w", err)
 	}
 
 	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer); err != nil {
-		return fmt.Errorf("Failed to build Docker image: %w", err)
+		return "", fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 
 	console.Info("Adding labels to image...")
 	schema, err := GenerateOpenAPISchema(imageName, cfg.Build.GPU)
 	if err != nil {
-		return fmt.Errorf("Failed to get type signature: %w", err)
+		return "", fmt.Errorf("Failed to get type signature: %w", err)
 	}
 	configJSON, err := json.Marshal(cfg)
 	if err != nil {
-		return fmt.Errorf("Failed to convert config to JSON: %w", err)
+		return "", fmt.Errorf("Failed to convert config to JSON: %w", err)
 	}
 	// We used to set the cog_version and config labels in Dockerfile, because we didn't require running the
 	// built image to get those. But, the escaping of JSON inside a label inside a Dockerfile was gnarly, and
@@ -70,13 +70,13 @@ func Build(cfg *config.Config, dir, imageName string, progressOutput string, wri
 	if len((*schema).(map[string]interface{})) != 0 {
 		schemaJSON, err := json.Marshal(schema)
 		if err != nil {
-			return fmt.Errorf("Failed to convert type signature to JSON: %w", err)
+			return "", fmt.Errorf("Failed to convert type signature to JSON: %w", err)
 		}
 		labels[global.LabelNamespace+"openapi_schema"] = string(schemaJSON)
 		labels["org.cogmodel.openapi_schema"] = string(schemaJSON)
 	}
 
-	return nil
+	return dockerfileContents, nil
 }
 
 func BuildBase(cfg *config.Config, dir string, progressOutput string) (string, error) {
