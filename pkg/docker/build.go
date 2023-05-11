@@ -66,6 +66,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		// "--load",
 		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
+		"--load", 
 		"--tag", imageUrl,
 		"--tag", imageLatest,
 		"--progress", progressOutput,
