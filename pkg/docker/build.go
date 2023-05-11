@@ -153,5 +153,5 @@ func m1BuildxBuildArgs() []string {
 }
 
 func buildKitBuildArgs() []string {
-	return []string{"build", "--platform", "linux/amd64"}
+	return []string{"buildx", "build", "--platform", "linux/amd64"}
 }
