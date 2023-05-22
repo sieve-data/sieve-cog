@@ -94,10 +94,10 @@ func (g *Generator) GenerateBase() (string, error) {
 		installPython,
 		g.installCython(),
 		installCog,
+		g.installSieve(),
 		aptInstalls,
 		pythonRequirements,
 		pipInstalls,
-		g.installSieve(),
 		run,
 		`WORKDIR /src`,
 		`EXPOSE 5000`,
@@ -226,7 +226,7 @@ func (g *Generator) installCython() string {
 }
 func (g *Generator) installSieve() string {
 	sieveExternal := "sievedata-0.0.1.1-py3-none-any.whl"
-	format := "COPY %s /tmp/%s\n RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s"
+	format := "COPY %s /tmp/%s\nRUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s"
 	line2 := fmt.Sprintf(format, sieveExternal, sieveExternal, sieveExternal)
 	return fmt.Sprintf("%s", line2)
 }

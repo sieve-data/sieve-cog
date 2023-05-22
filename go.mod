@@ -13,6 +13,7 @@ require (
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/term v0.0.0-20201110203204-bea5bbe245bf
+	github.com/replicate/cog v0.7.1
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	github.com/vincent-petithory/dataurl v1.0.0
