@@ -110,7 +110,10 @@ func (g *Generator) Generate() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base, nil
+	return strings.Join(filterEmpty([]string{
+		base,
+		`COPY . /src`,
+	}), "\n"), nil
 }
 
 func (g *Generator) Cleanup() error {
