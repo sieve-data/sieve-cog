@@ -207,7 +207,7 @@ func (g *Generator) installCog() (string, error) {
 		return "", fmt.Errorf("Failed to write %s: %w", cogFilename, err)
 	}
 	return fmt.Sprintf(`COPY %s /tmp/%s
-RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s`, path.Join(g.relativeTmpDir, cogFilename), cogFilename, cogFilename), nil
+RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s`, path.Join(g.tmpDir, cogFilename), cogFilename, cogFilename), nil
 }
 
 func (g *Generator) installPydanticNoBinary() string {
