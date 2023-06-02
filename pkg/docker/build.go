@@ -12,7 +12,7 @@ import (
 	"github.com/sieve-data/cog/pkg/util/console"
 )
 
-func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer) error {
+func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer, imagesToPull []string) error {
 
 	// write dockerfile to dir
 	// err := os.WriteFile(dir+"/Dockerfile", []byte(dockerfile), 0644)
@@ -60,6 +60,9 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-8:latest",
 		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/ffmpeg-python:latest",
 		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/basic-python:latest",
+	}
+	for _, image := range imagesToPull {
+		cache_from_images = append(cache_from_images, image)
 	}
 	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
 	args = append(args,
