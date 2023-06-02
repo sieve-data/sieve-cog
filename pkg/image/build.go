@@ -108,7 +108,7 @@ func Generate(cfg *config.Config, dir string) (string, string, error) {
 func BuildFromGenerate(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer, dockerfileContents string) (string, error) {
 	console.Infof("Building Docker image from environment in cog.yaml as %s...", imageName)
 
-	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer); err != nil {
+	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer, []string{}); err != nil {
 		return "", fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 
@@ -168,7 +168,7 @@ func BuildBase(cfg *config.Config, dir string, progressOutput string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("Failed to generate Dockerfile: %w", err)
 	}
-	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, os.Stderr); err != nil {
+	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, os.Stderr, []string{}); err != nil {
 		return "", fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 	return imageName, nil
