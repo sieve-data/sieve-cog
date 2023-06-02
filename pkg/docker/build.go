@@ -55,7 +55,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 	// 	args = buildKitBuildArgs()
 	// }
 	cache_from_images := []string{
-		imageLatest, 
+		imageLatest,
 		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-2:latest",
 		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-8:latest",
 		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/ffmpeg-python:latest",

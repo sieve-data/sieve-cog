@@ -80,14 +80,14 @@ func Build(cfg *config.Config, dir, imageName string, progressOutput string, wri
 	return dockerfileContents, nil
 }
 
-func Generate(cfg *config.Config, dir string) (string, error) {
+func Generate(cfg *config.Config, dir string) (string, string, error) {
 	console.Info(fmt.Sprint("cudav version before validate and complete", cfg.Build.CUDA))
 	cfg.ValidateAndCompleteCUDA()
 	console.Info(fmt.Sprint("cudav after before validate and complete", cfg.Build.CUDA))
 
 	generator, err := dockerfile.NewGenerator(cfg, dir)
 	if err != nil {
-		return "", fmt.Errorf("Error creating Dockerfile generator: %w", err)
+		return "", "", fmt.Errorf("Error creating Dockerfile generator: %w", err)
 	}
 	defer func() {
 		if err := generator.Cleanup(); err != nil {
@@ -97,9 +97,12 @@ func Generate(cfg *config.Config, dir string) (string, error) {
 
 	dockerfileContents, err := generator.Generate()
 	if err != nil {
-		return "", fmt.Errorf("Failed to generate Dockerfile: %w", err)
+		return "", "", fmt.Errorf("Failed to generate Dockerfile: %w", err)
 	}
-	return dockerfileContents, nil
+
+	cogSHA256 := generator.CogSHA256()
+
+	return dockerfileContents, cogSHA256, nil
 }
 
 func BuildFromGenerate(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer, dockerfileContents string) (string, error) {
