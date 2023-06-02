@@ -243,12 +243,9 @@ func (g *Generator) pythonRequirements() (string, error) {
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqs), nil
 }
 
-func (g *Generator) vogSHA256() (string, error) {
-	return generateSHA256(cogWheelEmbed), nil
+func (g *Generator) CogSHA256() string {
+	return generateSHA256(cogWheelEmbed)
 }
-
-func (g *Generator) sievePackageSHA256() (string, error) {
-
 
 func generateSHA256(input []byte) string {
 	// Create a new SHA256 hash object
