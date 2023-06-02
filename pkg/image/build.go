@@ -18,7 +18,7 @@ import (
 // Build a Cog model from a config
 //
 // This is separated out from docker.Build(), so that can be as close as possible to the behavior of 'docker build'.
-func Build(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer) (string, error) {
+func Build(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer, imagesToPull []string) (string, error) {
 	console.Info(fmt.Sprint("cudav version before validate and complete", cfg.Build.CUDA))
 	cfg.ValidateAndCompleteCUDA()
 	console.Info(fmt.Sprint("cudav after before validate and complete", cfg.Build.CUDA))
@@ -39,7 +39,7 @@ func Build(cfg *config.Config, dir, imageName string, progressOutput string, wri
 		return "", fmt.Errorf("Failed to generate Dockerfile: %w", err)
 	}
 
-	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer); err != nil {
+	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer, imagesToPull); err != nil {
 		return "", fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 
