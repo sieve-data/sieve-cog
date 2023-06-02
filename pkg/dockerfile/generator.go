@@ -2,7 +2,9 @@ package dockerfile
 
 import (
 	// blank import for embeds
+	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path"
@@ -239,6 +241,29 @@ func (g *Generator) pythonRequirements() (string, error) {
 	}
 	return fmt.Sprintf(`COPY %s /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqs), nil
+}
+
+func (g *Generator) vogSHA256() (string, error) {
+	return generateSHA256(cogWheelEmbed), nil
+}
+
+func (g *Generator) sievePackageSHA256() (string, error) {
+
+
+func generateSHA256(input []byte) string {
+	// Create a new SHA256 hash object
+	hash := sha256.New()
+
+	// Write the input string to the hash object
+	hash.Write([]byte(input))
+
+	// Get the hash sum as a byte slice
+	hashSum := hash.Sum(nil)
+
+	// Convert the byte slice to a hexadecimal string
+	hashString := hex.EncodeToString(hashSum)
+
+	return hashString
 }
 
 func (g *Generator) pipInstalls() (string, error) {
