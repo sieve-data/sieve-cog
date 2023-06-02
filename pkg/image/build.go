@@ -108,7 +108,9 @@ func Generate(cfg *config.Config, dir string) (string, string, error) {
 func BuildFromGenerate(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer, dockerfileContents string) (string, error) {
 	console.Infof("Building Docker image from environment in cog.yaml as %s...", imageName)
 
-	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer, []string{}); err != nil {
+	imagesToPull := []string{}
+
+	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, writer, imagesToPull); err != nil {
 		return "", fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 
@@ -153,6 +155,7 @@ func BuildBase(cfg *config.Config, dir string, progressOutput string) (string, e
 	// TODO: better image management so we don't eat up disk space
 	// https://github.com/sieve-data/cog/issues/80
 	imageName := config.BaseDockerImageName(dir)
+	imagesToPull := []string{}
 
 	console.Info("Building Docker image from environment in cog.yaml...")
 	generator, err := dockerfile.NewGenerator(cfg, dir)
@@ -168,7 +171,7 @@ func BuildBase(cfg *config.Config, dir string, progressOutput string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("Failed to generate Dockerfile: %w", err)
 	}
-	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, os.Stderr, []string{}); err != nil {
+	if err := docker.Build(dir, dockerfileContents, imageName, progressOutput, os.Stderr, imagesToPull); err != nil {
 		return "", fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 	return imageName, nil
