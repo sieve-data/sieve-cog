@@ -109,7 +109,7 @@ func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Wr
 }
 
 func BuildAndPush(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer) error {
-	err := Build(dir, dockerfile, imageUrl, progressOutput, writer)
+	err := Build(dir, dockerfile, imageUrl, progressOutput, writer, []string{})
 	if err != nil {
 		return err
 	}
