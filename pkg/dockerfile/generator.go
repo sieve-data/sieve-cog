@@ -79,10 +79,10 @@ func (g *Generator) GenerateBase() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	installCog, err := g.installCog()
-	if err != nil {
-		return "", err
-	}
+	// installCog, err := g.installCog()
+	// if err != nil {
+	// 	return "", err
+	// }
 	run, err := g.run()
 	if err != nil {
 		return "", err
@@ -95,7 +95,7 @@ func (g *Generator) GenerateBase() (string, error) {
 		g.installTini(),
 		installPython,
 		g.installCython(),
-		installCog,
+		// installCog,
 		aptInstalls,
 		pythonRequirements,
 		pipInstalls,
