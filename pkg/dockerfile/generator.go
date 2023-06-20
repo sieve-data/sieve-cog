@@ -114,7 +114,7 @@ func (g *Generator) Generate() (string, error) {
 	}
 	return strings.Join(filterEmpty([]string{
 		base,
-		`COPY . /src`,
+		// `COPY . /src`,
 	}), "\n"), nil
 }
 
