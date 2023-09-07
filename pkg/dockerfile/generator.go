@@ -58,6 +58,7 @@ func (g *Generator) GenerateBase() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	installPython := ""
 	if g.Config.Build.GPU {
 		installPython, err = g.installPythonCUDA()
@@ -65,6 +66,7 @@ func (g *Generator) GenerateBase() (string, error) {
 			return "", err
 		}
 	}
+
 	aptInstalls, err := g.aptInstalls()
 	if err != nil {
 		return "", err
@@ -73,16 +75,13 @@ func (g *Generator) GenerateBase() (string, error) {
 	pythonRequirements, err := g.pythonRequirements()
 	if err != nil {
 		return "", err
-
 	}
+
 	pipInstalls, err := g.pipInstalls()
 	if err != nil {
 		return "", err
 	}
-	// installCog, err := g.installCog()
-	// if err != nil {
-	// 	return "", err
-	// }
+
 	run, err := g.run()
 	if err != nil {
 		return "", err
@@ -95,11 +94,10 @@ func (g *Generator) GenerateBase() (string, error) {
 		g.installTini(),
 		installPython,
 		g.installCython(),
-		// installCog,
 		aptInstalls,
-		pythonRequirements,
+		g.sieveRequirements(),
 		pipInstalls,
-		g.installSieve(),
+		pythonRequirements,
 		run,
 		`WORKDIR /src`,
 		`EXPOSE 5000`,
@@ -261,6 +259,34 @@ func generateSHA256(input []byte) string {
 	hashString := hex.EncodeToString(hashSum)
 
 	return hashString
+}
+
+func (g *Generator) sieveRequirements() string {
+	sieveRequirements := []string{
+		"requests>=2.0",
+		"click>=8.0",
+		"pydantic==1.10.9",
+		"pathlib>=1.0.1",
+		"typing>=3.6",
+		"numpy>=1.19.0",
+		"argparse>=1.4.0",
+		"tqdm==4.64.1",
+		"uuid>=1.30",
+		"networkx",
+		"opencv-python-headless==4.5.5.64",
+		"typeguard",
+		"pillow",
+		"typer>=0.7.0",
+		"rich",
+		"cloudpickle",
+		"docstring_parser",
+		"jsonref",
+		"protobuf==3.20.3",
+		"pyyaml",
+		"grpcio==1.54.0",
+	}
+
+	return fmt.Sprintf(`RUN --mount=type=cache,target=/root/.cache/pip pip install %s`, strings.Join(sieveRequirements, " "))
 }
 
 func (g *Generator) pipInstalls() (string, error) {

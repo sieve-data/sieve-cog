@@ -14,59 +14,16 @@ import (
 
 func Build(dir, dockerfile, imageUrl string, progressOutput string, writer io.Writer, imagesToPull []string) error {
 
-	// write dockerfile to dir
-	// err := os.WriteFile(dir+"/Dockerfile", []byte(dockerfile), 0644)
-	// if err != nil {
-	// 	return err
-	// }
-
 	imageLatest := strings.Split(imageUrl, ":")[0] + ":latest"
 
-	// cloudbuildYaml := fmt.Sprintf(
-	// `steps:
-	//  - name: 'ghcr.io/depot/cli:latest'
-	//    env:
-	//     - DEPOT_TOKEN=%s
-	//    args: ['build', '--project', 'zz1b68kjbv', '-t', '%s', '.', "--push"]
-	// `, depotToken, imageUrl)
-
-	// tmpFile, err := ioutil.TempFile(os.TempDir(), "cloudbuild.yaml")
-	// if err != nil {
-	// 	return err
-	// }
-	// defer os.Remove(tmpFile.Name())
-	// tmpFile.Write([]byte(cloudbuildYaml))
-
-	// // close the file
-	// if err := tmpFile.Close(); err != nil {
-	// 	return err
-	// }
-
-	// pullCommand := []string{"docker", "pull", imageLatest}
-	// pullcmd := exec.Command(pullCommand[0], pullCommand[1:]...)
-	// pullcmd.Stdout = writer // redirect stdout to stderr - build output is all messaging
-	// pullcmd.Stderr = writer
-	// pullcmd.Run()
-
 	var args []string
-	// if util.IsM1Mac(runtime.GOOS, runtime.GOARCH) {
-	// 	args = m1BuildxBuildArgs()
-	// } else {
-	// 	args = buildKitBuildArgs()
-	// }
-	cache_from_images := []string{
-		imageLatest,
-		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-2:latest",
-		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/cuda-11-8:latest",
-		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/ffmpeg-python:latest",
-		"us-central1-docker.pkg.dev/sieve-grapefruit/grapefruit-containers/base-images/basic-python:latest",
-	}
+
+	cache_from_images := []string{imageLatest}
 	for _, image := range imagesToPull {
 		cache_from_images = append(cache_from_images, image)
 	}
-	args = buildKitBuildArgs() //[]string{"buildx", "--project", depotProjectId, "-t", imageUrl, ".", "--push"}
+	args = buildKitBuildArgs()
 	args = append(args,
-		// "--load",
 		"--build-arg", "BUILDKIT_INLINE_CACHE=1",
 		"--file", "-",
 		"--tag", imageUrl,
