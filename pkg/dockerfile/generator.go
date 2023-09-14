@@ -246,7 +246,7 @@ func (g *Generator) uninstallPydantic() string {
 }
 
 func (g *Generator) installCython() string {
-	return "RUN --mount=type=cache,target=/root/.cache/pip pip install cython"
+	return "RUN --mount=type=cache,target=/root/.cache/pip pip install cython==\"0.29.34\""
 }
 func (g *Generator) installSieve() string {
 	sieveExternal := "sievedata-0.0.1.1-py3-none-any.whl"
