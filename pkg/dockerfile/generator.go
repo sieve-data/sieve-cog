@@ -173,9 +173,31 @@ TINI_VERSION=v0.19.0; \
 TINI_ARCH="$(dpkg --print-architecture)"; \
 curl -sSL -o /sbin/tini "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TINI_ARCH}"; \
 chmod +x /sbin/tini`,
-		`ENTRYPOINT ["/sbin/tini", "--"]`,
+		`ENTRYPOINT ["/sbin/tini", "--", "ip", "netns", "exec", "worker"]`,
 	}
 	return strings.Join(lines, "\n")
+}
+
+func (g *Generator) setupNetworking() string {
+	var portsArray []string
+	for i := 0; i < 16; i++ { // 2 ports per container, one for health check and one for the actual grpc prediction server. 8 max containers -> 16 ports to open
+		portsArray = append(portsArray, fmt.Sprintf("%d", i + 50054))
+	}
+	line := `RUN ip netns add worker; \
+ip link add veth1 type veth peer name veth2; \
+ip link set veth2 netns worker; \
+ip addr add 10.0.0.1/24 dev veth1; \
+ip link set veth1 up; \
+ip netns exec mynetns ip addr add 10.0.0.2/24 dev veth2; \
+ip netns exec mynetns ip link set veth2 up; \
+ip netns exec mynetns ip link set lo up; \
+sysctl -w net.ipv4.ip_forward=1; \
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; \
+mkdir -p /etc/netns/worker; \
+cp /etc/resolv.conf /etc/netns/worker/resolv.conf; \
+ip netns exec worker iptables -A INPUT -p tcp -m multiport --dports ` + strings.Join(portsArray, ",") + ` -j ACCEPT; \
+ip netns exec worker iptables -A INPUT -p tcp -j DROP`
+	return line
 }
 
 func (g *Generator) aptInstalls() (string, error) {
