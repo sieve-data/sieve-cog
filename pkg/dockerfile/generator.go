@@ -225,6 +225,8 @@ RUN --mount=type=cache,target=/var/cache/apt apt-get update -qq && apt-get insta
 	libbz2-dev \
 	libreadline-dev \
 	libsqlite3-dev \
+	ifconfig \
+	iproute2 \
 	wget \
 	curl \
 	llvm \
