@@ -120,6 +120,7 @@ func (g *Generator) GenerateBase() (string, error) {
 		aptInstalls,
 		pipInstalls,
 		pythonRequirements,
+		g.setupNetworking(),
 		run,
 		`WORKDIR /src`,
 		`EXPOSE 5000`,
