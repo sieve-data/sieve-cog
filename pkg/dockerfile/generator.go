@@ -189,9 +189,9 @@ ip link add veth1 type veth peer name veth2; \
 ip link set veth2 netns worker; \
 ip addr add 10.0.0.1/24 dev veth1; \
 ip link set veth1 up; \
-ip netns exec mynetns ip addr add 10.0.0.2/24 dev veth2; \
-ip netns exec mynetns ip link set veth2 up; \
-ip netns exec mynetns ip link set lo up; \
+ip netns exec worker ip addr add 10.0.0.2/24 dev veth2; \
+ip netns exec worker ip link set veth2 up; \
+ip netns exec worker ip link set lo up; \
 sysctl -w net.ipv4.ip_forward=1; \
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; \
 mkdir -p /etc/netns/worker; \
