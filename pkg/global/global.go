@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Version               = "dev"
+	Version               = "ethan-dev"
 	Commit                = ""
 	BuildTime             = "none"
 	Debug                 = false

@@ -116,6 +116,7 @@ func (g *Generator) GenerateBase() (string, error) {
 		g.installTini(),
 		installPython,
 		g.installCython(),
+		g.installSieve(),
 		g.sieveRequirements(),
 		aptInstalls,
 		pipInstalls,
