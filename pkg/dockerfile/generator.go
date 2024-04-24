@@ -109,6 +109,11 @@ func (g *Generator) GenerateBase() (string, error) {
 		return "", err
 	}
 
+	pythonImports, err := g.pythonImports()
+	if err != nil {
+		return "", err
+	}
+
 	return strings.Join(filterEmpty([]string{
 		"# syntax = docker/dockerfile:1.2",
 		"FROM " + baseImage,
@@ -121,6 +126,7 @@ func (g *Generator) GenerateBase() (string, error) {
 		pipInstalls,
 		pythonRequirements,
 		run,
+		pythonImports,
 		`WORKDIR /src`,
 		`EXPOSE 5000`,
 		`CMD ["python", "-m", "cog.server.http"]`,
@@ -261,6 +267,31 @@ func (g *Generator) pythonRequirements() (string, error) {
 	}
 	return fmt.Sprintf(`COPY %s /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqs), nil
+}
+
+func (g *Generator) pythonImports() (string, error) {
+	requirements := g.Config.Build.PythonRequirements
+	if requirements == "" {
+		return "", nil
+	}
+
+	var imports []string
+	for _, line := range strings.Split(requirements, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		pkgName := strings.Split(line, "==")[0]
+		imports = append(imports, pkgName)
+	}
+
+	pythonCmd := `RUN python -c "import importlib; failed_imports = [];`
+	for _, pkg := range imports {
+		pythonCmd += fmt.Sprintf(`try: importlib.import_module('%s') except ImportError: failed_imports.append('%s');`, pkg, pkg)
+	}
+	pythonCmd += `print('Warning - could not cache imports:', failed_imports)"`
+
+	return pythonCmd, nil
 }
 
 func (g *Generator) CogSHA256() string {
