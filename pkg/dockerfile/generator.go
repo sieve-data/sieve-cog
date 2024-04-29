@@ -18,28 +18,6 @@ import (
 //go:embed embed/cog.whl
 var cogWheelEmbed []byte
 
-var SieveRequirements = []string{
-	"requests",
-	"click",
-	"pydantic",
-	"pathlib",
-	"typing",
-	"argparse",
-	"tqdm",
-	"uuid",
-	"networkx",
-	"typeguard",
-	"pillow",
-	"typer",
-	"rich",
-	"cloudpickle",
-	"docstring_parser",
-	"jsonref",
-	"protobuf",
-	"pyyaml",
-	"grpcio",
-}
-
 type Generator struct {
 	Config *config.Config
 	Dir    string
@@ -116,7 +94,7 @@ func (g *Generator) GenerateBase() (string, error) {
 		g.installTini(),
 		installPython,
 		g.installCython(),
-		g.sieveRequirements(),
+		g.installSieve(),
 		aptInstalls,
 		pipInstalls,
 		pythonRequirements,
@@ -247,10 +225,7 @@ func (g *Generator) installCython() string {
 	return "RUN --mount=type=cache,target=/root/.cache/pip pip install cython==\"0.29.34\""
 }
 func (g *Generator) installSieve() string {
-	sieveExternal := "sievedata-0.0.1.1-py3-none-any.whl"
-	format := "COPY %s /tmp/%s\n RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/%s"
-	line2 := fmt.Sprintf(format, sieveExternal, sieveExternal, sieveExternal)
-	return fmt.Sprintf("%s", line2)
+	return "RUN --mount=type=cache,target=/root/.cache/pip pip install sievedata"
 }
 
 func (g *Generator) pythonRequirements() (string, error) {
@@ -281,10 +256,6 @@ func generateSHA256(input []byte) string {
 	hashString := hex.EncodeToString(hashSum)
 
 	return hashString
-}
-
-func (g *Generator) sieveRequirements() string {
-	return fmt.Sprintf(`RUN --mount=type=cache,target=/root/.cache/pip pip install %s`, strings.Join(SieveRequirements, " "))
 }
 
 func (g *Generator) pipInstalls() (string, error) {
