@@ -6,9 +6,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/sieve-data/cog/pkg/errors"
-	"github.com/sieve-data/cog/pkg/global"
-	"github.com/sieve-data/cog/pkg/util/files"
+	"github.com/replicate/cog/pkg/errors"
+	"github.com/replicate/cog/pkg/global"
+	"github.com/replicate/cog/pkg/util/files"
 )
 
 const maxSearchDepth = 100
@@ -41,6 +41,8 @@ func GetConfig(customDir string) (*Config, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+
+	err = config.ValidateAndComplete(rootDir)
 
 	return config, rootDir, err
 }
@@ -88,12 +90,12 @@ func findConfigPathInDirectory(dir string) (configPath string, err error) {
 func findProjectRootDir(startDir string) (string, error) {
 	dir := startDir
 	for i := 0; i < maxSearchDepth; i++ {
-		_, err := findConfigPathInDirectory(dir)
-		if err != nil && !errors.IsConfigNotFound(err) {
+		switch _, err := findConfigPathInDirectory(dir); {
+		case err != nil && !errors.IsConfigNotFound(err):
 			return "", err
-		} else if err == nil {
+		case err == nil:
 			return dir, nil
-		} else if dir == "." || dir == "/" {
+		case dir == "." || dir == "/":
 			return "", errors.ConfigNotFound(fmt.Sprintf("%s not found in %s (or in any parent directories)", global.ConfigFilename, startDir))
 		}
 
