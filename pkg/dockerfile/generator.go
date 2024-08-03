@@ -125,6 +125,9 @@ func (g *Generator) Cleanup() error {
 
 func (g *Generator) baseImage() (string, error) {
 	if g.Config.Build.GPU {
+		if err := g.Config.ValidateAndComplete(""); err != nil {
+			return "", err
+		}
 		return g.Config.CUDABaseImageTag()
 	}
 	return "python:" + g.Config.Build.PythonVersion, nil

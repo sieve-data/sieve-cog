@@ -514,6 +514,26 @@ func TestCUDABaseImageTag(t *testing.T) {
 	require.Equal(t, "nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04", imageTag)
 }
 
+func TestCUDABaseImageTagTorch(t *testing.T) {
+	config := &Config{
+		Build: &Build{
+			GPU:           true,
+			CUDA:          "12.1",
+			PythonVersion: "3.10",
+			PythonPackages: []string{
+				"torch>=2.1.0",
+			},
+		},
+	}
+
+	err := config.ValidateAndComplete("")
+	require.NoError(t, err)
+
+	imageTag, err := config.CUDABaseImageTag()
+	require.NoError(t, err)
+	require.Equal(t, "nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04", imageTag)
+}
+
 func TestBuildRunItemStringYAML(t *testing.T) {
 	type BuildWrapper struct {
 		Build *Build `yaml:"build"`
