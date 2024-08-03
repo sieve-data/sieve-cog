@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"log"
+
 	"github.com/sieve-data/cog/pkg/util"
 	"github.com/sieve-data/cog/pkg/util/console"
 
@@ -194,8 +196,13 @@ func resolveMinorToPatch(minor string) (string, error) {
 
 func latestCuDNNForCUDA(cuda string) (string, error) {
 	cuDNNs := []string{}
+	log.Default().Printf("Checking cuda %s", cuda)
 	for _, image := range CUDABaseImages {
+		log.Default().Printf("Checking for compat with %s", image.CUDA)
+
 		if version.Equal(image.CUDA, cuda) {
+			log.Default().Printf("Found compat with %s", image.CUDA)
+			log.Default().Printf("Adding %s to cuDNNs", image.CuDNN)
 			cuDNNs = append(cuDNNs, image.CuDNN)
 		}
 	}

@@ -22,3 +22,9 @@ func TestResolveMinorToPatch(t *testing.T) {
 	_, err = resolveMinorToPatch("1214348324.432879432")
 	require.Error(t, err)
 }
+
+func TestLatestCuDNNForCUDA12(t *testing.T) {
+	actual, err := latestCuDNNForCUDA("12.1")
+	require.NoError(t, err)
+	require.Equal(t, "8", actual)
+}
