@@ -8,12 +8,12 @@ import (
 	"sort"
 	"strings"
 
-	"log"
+	"golang.org/x/exp/slices"
 
-	"github.com/sieve-data/cog/pkg/util"
-	"github.com/sieve-data/cog/pkg/util/console"
+	"github.com/replicate/cog/pkg/util"
+	"github.com/replicate/cog/pkg/util/console"
 
-	"github.com/sieve-data/cog/pkg/util/version"
+	"github.com/replicate/cog/pkg/util/version"
 )
 
 // TODO(andreas): check tf/py versions. tf 1.5.0 didn't install on py 3.8
@@ -78,56 +78,103 @@ type CUDABaseImage struct {
 	Ubuntu  string
 }
 
-func (i *CUDABaseImage) UnmarshalJSON(data []byte) error {
-	var tag string
-	if err := json.Unmarshal(data, &tag); err != nil {
-		return err
-	}
-	parts := strings.Split(tag, "-")
-	if len(parts) != 4 {
-		return fmt.Errorf("Tag must be in the format <cudaVersion>-cudnn<cudnnVersion>-{devel,runtime}-ubuntu<ubuntuVersion>. Invalid tag: %s", tag)
-	}
-	i.Tag = tag
-	i.CUDA = parts[0]
-	i.CuDNN = strings.Split(parts[1], "cudnn")[1]
-	i.IsDevel = parts[2] == "devel"
-	i.Ubuntu = strings.Split(parts[3], "ubuntu")[1]
-	return nil
-}
-
 func (i *CUDABaseImage) ImageTag() string {
 	return "nvidia/cuda:" + i.Tag
 }
 
-//go:generate go run ../../tools/generate_compatibility_matrices/main.go -tf-output tf_compatability_matrix.json -torch-output torch_compatability_matrix.json -cuda-images-output cuda_base_image_tags.json
+//go:generate go run ../../tools/compatgen/main.go cuda -o cuda_base_images.json
+//go:embed cuda_base_images.json
+var cudaBaseImagesData []byte
+var CUDABaseImages []CUDABaseImage
 
-//go:embed tf_compatability_matrix.json
+//go:generate go run ../../tools/compatgen/main.go tensorflow -o tf_compatibility_matrix.json
+//go:embed tf_compatibility_matrix.json
 var tfCompatibilityMatrixData []byte
 var TFCompatibilityMatrix []TFCompatibility
 
-//go:embed torch_compatability_matrix.json
+//go:generate go run ../../tools/compatgen/main.go torch -o torch_compatibility_matrix.json
+//go:embed torch_compatibility_matrix.json
 var torchCompatibilityMatrixData []byte
 var TorchCompatibilityMatrix []TorchCompatibility
 
-//go:embed cuda_base_image_tags.json
-var cudaBaseImageTagsData []byte
-var CUDABaseImages []CUDABaseImage
+// For minor Torch versions we use the latest patch version.
+// This is semantically different to pip, which uses the .0
+// patch version.
+var TorchMinorCompatibilityMatrix []TorchCompatibility
 
 func init() {
+	if err := json.Unmarshal(cudaBaseImagesData, &CUDABaseImages); err != nil {
+		console.Fatalf("Failed to load embedded CUDA base images: %s", err)
+	}
+
 	if err := json.Unmarshal(tfCompatibilityMatrixData, &TFCompatibilityMatrix); err != nil {
 		console.Fatalf("Failed to load embedded Tensorflow compatibility matrix: %s", err)
 	}
-	if err := json.Unmarshal(torchCompatibilityMatrixData, &TorchCompatibilityMatrix); err != nil {
+
+	var torchCompatibilityMatrix []TorchCompatibility
+	if err := json.Unmarshal(torchCompatibilityMatrixData, &torchCompatibilityMatrix); err != nil {
 		console.Fatalf("Failed to load embedded PyTorch compatibility matrix: %s", err)
 	}
-	if err := json.Unmarshal(cudaBaseImageTagsData, &CUDABaseImages); err != nil {
-		console.Fatalf("Failed to load embedded CUDA base images: %s", err)
+	filteredTorchCompatibilityMatrix := []TorchCompatibility{}
+	for _, compat := range torchCompatibilityMatrix {
+		for _, cudaBaseImage := range CUDABaseImages {
+			if compat.CUDA == nil || version.Matches(*compat.CUDA, cudaBaseImage.CUDA) {
+				filteredTorchCompatibilityMatrix = append(filteredTorchCompatibilityMatrix, compat)
+				break
+			}
+		}
 	}
+	TorchCompatibilityMatrix = filteredTorchCompatibilityMatrix
+	TorchMinorCompatibilityMatrix = generateTorchMinorVersionCompatibilityMatrix(TorchCompatibilityMatrix)
+}
+
+func generateTorchMinorVersionCompatibilityMatrix(matrix []TorchCompatibility) []TorchCompatibility {
+	minorMatrix := []TorchCompatibility{}
+
+	// First sort compatibilities by Torch version descending
+	matrixByTorchDesc := make([]TorchCompatibility, len(matrix))
+	copy(matrixByTorchDesc, matrix)
+	sort.Slice(matrixByTorchDesc, func(i, j int) bool {
+		return version.Greater(matrixByTorchDesc[i].Torch, matrixByTorchDesc[j].Torch)
+	})
+
+	// Then pick CUDA for the most recent patch versions
+	seenCUDATorchMinor := make(map[[2]string]bool)
+
+	for _, compat := range matrixByTorchDesc {
+		cudaString := ""
+		if compat.CUDA != nil {
+			cudaString = *compat.CUDA
+		}
+		torchMinor := version.StripPatch(compat.Torch)
+		key := [2]string{cudaString, torchMinor}
+
+		if seen := seenCUDATorchMinor[key]; !seen {
+			minorMatrix = append(minorMatrix, TorchCompatibility{
+				Torch:         torchMinor,
+				CUDA:          compat.CUDA,
+				Pythons:       compat.Pythons,
+				Torchvision:   compat.Torchvision,
+				Torchaudio:    compat.Torchaudio,
+				FindLinks:     compat.FindLinks,
+				ExtraIndexURL: compat.ExtraIndexURL,
+			})
+			seenCUDATorchMinor[key] = true
+		}
+	}
+	return minorMatrix
+
 }
 
 func cudasFromTorch(ver string) ([]string, error) {
 	cudas := []string{}
 	for _, compat := range TorchCompatibilityMatrix {
+		if ver == compat.TorchVersion() && compat.CUDA != nil {
+			cudas = append(cudas, *compat.CUDA)
+		}
+	}
+	slices.Sort(cudas)
+	for _, compat := range TorchMinorCompatibilityMatrix {
 		if ver == compat.TorchVersion() && compat.CUDA != nil {
 			cudas = append(cudas, *compat.CUDA)
 		}
@@ -155,7 +202,8 @@ func compatibleCuDNNsForCUDA(cuda string) []string {
 }
 
 func defaultCUDA() string {
-	return latestTF().CUDA
+	// TODO: change this to latestTF().CUDA once replicate supports >= 12 everywhere
+	return "11.8"
 }
 
 func latestCUDAFrom(cudas []string) string {
@@ -177,32 +225,10 @@ func latestCUDAFrom(cudas []string) string {
 	return latest
 }
 
-// resolveMinorToPatch takes a minor version string (e.g. 11.1) and resolves it to its full patch version (11.1.1)
-// If no patch version exists, it returns the plain old minor version (e.g. 10.3)
-func resolveMinorToPatch(minor string) (string, error) {
-	patch := ""
-	for _, image := range CUDABaseImages {
-		if version.EqualMinor(minor, image.CUDA) {
-			if patch == "" || version.Greater(image.CUDA, patch) {
-				patch = image.CUDA
-			}
-		}
-	}
-	if patch == "" {
-		return "", fmt.Errorf("CUDA version %s could not be found", minor)
-	}
-	return patch, nil
-}
-
 func latestCuDNNForCUDA(cuda string) (string, error) {
 	cuDNNs := []string{}
-	log.Default().Printf("Checking cuda %s", cuda)
 	for _, image := range CUDABaseImages {
-		log.Default().Printf("Checking for compat with %s", image.CUDA)
-
-		if version.Equal(image.CUDA, cuda) {
-			log.Default().Printf("Found compat with %s", image.CUDA)
-			log.Default().Printf("Adding %s to cuDNNs", image.CuDNN)
+		if version.Matches(cuda, image.CUDA) {
 			cuDNNs = append(cuDNNs, image.CuDNN)
 		}
 	}
@@ -214,26 +240,6 @@ func latestCuDNNForCUDA(cuda string) (string, error) {
 		return "", fmt.Errorf("CUDA %s is not supported by Cog", cuda)
 	}
 	return cuDNNs[0], nil
-}
-
-func latestTF() TFCompatibility {
-	var latest *TFCompatibility
-	for _, compat := range TFCompatibilityMatrix {
-		compat := compat
-		if latest == nil {
-			latest = &compat
-		} else {
-			greater, err := versionGreater(compat.TF, latest.TF)
-			if err != nil {
-				// should never happen
-				panic(fmt.Sprintf("Invalid tensorflow version: %s", err))
-			}
-			if greater {
-				latest = &compat
-			}
-		}
-	}
-	return *latest
 }
 
 func versionGreater(a string, b string) (bool, error) {
@@ -250,21 +256,34 @@ func versionGreater(a string, b string) (bool, error) {
 }
 
 func CUDABaseImageFor(cuda string, cuDNN string) (string, error) {
+	var images []CUDABaseImage
 	for _, image := range CUDABaseImages {
-		if version.Equal(image.CUDA, cuda) && image.CuDNN == cuDNN {
-			return image.ImageTag(), nil
+		if version.Matches(cuda, image.CUDA) && image.CuDNN == cuDNN {
+			images = append(images, image)
 		}
 	}
-	return "", fmt.Errorf("No matching base image for CUDA %s and CuDNN %s", cuda, cuDNN)
+	if len(images) == 0 {
+		return "", fmt.Errorf("No matching base image for CUDA %s and CuDNN %s", cuda, cuDNN)
+	}
+
+	sort.Slice(images, func(i, j int) bool {
+		if images[i].CUDA != images[j].CUDA {
+			return version.MustVersion(images[i].CUDA).Greater(version.MustVersion(images[j].CUDA))
+		}
+		return images[i].Ubuntu > images[j].Ubuntu
+	})
+
+	return images[0].ImageTag(), nil
 }
 
 func tfGPUPackage(ver string, cuda string) (name string, cpuVersion string, err error) {
 	for _, compat := range TFCompatibilityMatrix {
 		if compat.TF == ver && version.Equal(compat.CUDA, cuda) {
-			return splitPinnedPythonRequirement(compat.TFGPUPackage)
+			name, cpuVersion, _, _, err = splitPinnedPythonRequirement(compat.TFGPUPackage)
+			return name, cpuVersion, err
 		}
 	}
-	// We've already warned user if they're doing something stupid in ValidateAndCompleteCUDA(), so fail silently
+	// We've already warned user if they're doing something stupid in validateAndCompleteCUDA(), so fail silently
 	return "", "", nil
 }
 
@@ -310,6 +329,7 @@ func torchGPUPackage(ver string, cuda string) (name, cpuVersion, findLinks, extr
 		}
 	}
 	if latest == nil {
+		// We've already warned user if they're doing something stupid in validateAndCompleteCUDA()
 		return "torch", ver, "", "", nil
 	}
 
@@ -369,7 +389,7 @@ func torchvisionGPUPackage(ver, cuda string) (name, cpuVersion, findLinks, extra
 // TODO(andreas): clean up this hack by actually parsing the torch_stable.html list in the generator
 func torchStripCPUSuffixForM1(version string, goos string, goarch string) string {
 	// TODO(andreas): clean up this hack
-	if util.IsM1Mac(goos, goarch) {
+	if util.IsAppleSiliconMac(goos, goarch) {
 		return strings.ReplaceAll(version, "+cpu", "")
 	}
 	return version
