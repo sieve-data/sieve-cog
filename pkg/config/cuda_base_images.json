@@ -1,19 +1,5 @@
 [
   {
-    "Tag": "12.4.1-cudnn-devel-ubuntu22.04",
-    "CUDA": "12.4.1",
-    "CuDNN": "9",
-    "IsDevel": true,
-    "Ubuntu": "22.04"
-  },
-  {
-    "Tag": "12.4.1-cudnn-devel-ubuntu20.04",
-    "CUDA": "12.4.1",
-    "CuDNN": "9",
-    "IsDevel": true,
-    "Ubuntu": "20.04"
-  },
-  {
     "Tag": "12.3.2-cudnn9-devel-ubuntu22.04",
     "CUDA": "12.3.2",
     "CuDNN": "9",
