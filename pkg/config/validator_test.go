@@ -105,3 +105,17 @@ func TestValidateCUDA12_1Allowed(t *testing.T) {
 	err := Validate(config, "1.0")
 	require.NoError(t, err)
 }
+
+func TestValidateCUDA12_4Allowed(t *testing.T) {
+	config := `build:
+  gpu: true
+  python_version: "3.10"
+  cuda: "12.4"
+  cudnn: "8"
+  system_packages: []
+  python_packages: [torch>=2.4.0]
+  run: []`
+
+	err := Validate(config, "1.0")
+	require.NoError(t, err)
+}
