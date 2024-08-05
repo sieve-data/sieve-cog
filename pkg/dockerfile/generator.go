@@ -125,6 +125,9 @@ func (g *Generator) Cleanup() error {
 
 func (g *Generator) baseImage() (string, error) {
 	if g.Config.Build.GPU {
+		if err := g.Config.ValidateAndComplete(g.Dir); err != nil {
+			return "", err
+		}
 		return g.Config.CUDABaseImageTag()
 	}
 	return "python:" + g.Config.Build.PythonVersion, nil
@@ -260,7 +263,7 @@ func generateSHA256(input []byte) string {
 }
 
 func (g *Generator) pipInstalls() (string, error) {
-	requirements, err := g.Config.PythonRequirementsForArch(g.GOOS, g.GOARCH)
+	requirements, err := g.Config.PythonRequirementsForArch(g.GOOS, g.GOARCH, []string{})
 	if err != nil {
 		return "", err
 	}
@@ -281,17 +284,17 @@ func (g *Generator) run() (string, error) {
 	runCommands := g.Config.Build.Run
 
 	// For backwards compatibility
-	runCommands = append(runCommands, g.Config.Build.PreInstall...)
+	// runCommands = append(runCommands, g.Config.Build.PreInstall...)
 
 	lines := []string{}
 	for _, run := range runCommands {
-		run = strings.TrimSpace(run)
-		if strings.Contains(run, "\n") {
+		command := strings.TrimSpace(run.Command)
+		if strings.Contains(command, "\n") {
 			return "", fmt.Errorf(`One of the commands in 'run' contains a new line, which won't work. You need to create a new list item in YAML prefixed with '-' for each command.
 
-This is the offending line: %s`, run)
+This is the offending line: %s`, command)
 		}
-		lines = append(lines, "RUN "+run)
+		lines = append(lines, "RUN "+command)
 	}
 	return strings.Join(lines, "\n"), nil
 }

@@ -16,7 +16,7 @@ import (
 // This is separated out from docker.Build(), so that can be as close as possible to the behavior of 'docker build'.
 func Build(cfg *config.Config, dir, imageName string, progressOutput string, writer io.Writer, imagesToPull []string) (string, error) {
 	console.Info(fmt.Sprint("cudav version before validate and complete", cfg.Build.CUDA))
-	cfg.ValidateAndCompleteCUDA()
+	// cfg.ValidateAndCompleteCUDA()
 	console.Info(fmt.Sprint("cudav after before validate and complete", cfg.Build.CUDA))
 	console.Infof("Building Docker image from environment in cog.yaml as %s...", imageName)
 
@@ -45,7 +45,7 @@ func Build(cfg *config.Config, dir, imageName string, progressOutput string, wri
 
 func Generate(cfg *config.Config, dir string) (string, string, error) {
 	console.Info(fmt.Sprint("cudav version before validate and complete", cfg.Build.CUDA))
-	cfg.ValidateAndCompleteCUDA()
+	// cfg.ValidateAndCompleteCUDA()
 	console.Info(fmt.Sprint("cudav after before validate and complete", cfg.Build.CUDA))
 
 	generator, err := dockerfile.NewGenerator(cfg, dir)
