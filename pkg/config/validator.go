@@ -18,7 +18,7 @@ const (
 %s.
 
 To see what options you can use, take a look at the docs:
-https://github.com/sieve-data/cog/blob/main/docs/yaml.md
+https://github.com/replicate/cog/blob/main/docs/yaml.md
 
 You might also need to upgrade Cog, if this option was added in a
 later version of Cog.`
@@ -32,7 +32,7 @@ func getSchema(version string) (gojsonschema.JSONLoader, error) {
 	// Default schema
 	currentSchema := schemaV1
 
-	switch version {
+	switch version { //nolint:gocritic
 	case defaultVersion:
 		currentSchema = schemaV1
 	}
@@ -91,7 +91,7 @@ func getDescription(err validationError) string {
 	switch err.parent.Type() {
 	case "invalid_type":
 		if expectedType, ok := err.parent.Details()["expected"].(string); ok {
-			return fmt.Sprintf("must be a %s", humanReadableType(expectedType))
+			return fmt.Sprintf("%s must be a %s", err.parent.Field(), humanReadableType(expectedType))
 		}
 	case jsonschemaOneOf, jsonschemaAnyOf:
 		if err.child == nil {
