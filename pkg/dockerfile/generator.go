@@ -205,7 +205,7 @@ RUN --mount=type=cache,target=/var/cache/apt apt-get update -qq && apt-get insta
 func (g *Generator) installCog() (string, error) {
 	// Wheel name needs to be full format otherwise pip refuses to install it
 	cogFilename := "cog-0.0.1.dev-py3-none-any.whl"
-	cogPath := filepath.Join(g.tmpDir, cogFilename)
+	cogPath := filepath.Join(g.relativeTmpDir, cogFilename)
 	if err := os.MkdirAll(filepath.Dir(cogPath), 0o755); err != nil {
 		return "", fmt.Errorf("Failed to write %s: %w", cogFilename, err)
 	}
@@ -238,10 +238,7 @@ func (g *Generator) pythonRequirements() (string, error) {
 		return "", nil
 	}
 	reqsString := strings.Join(reqs, "\n")
-	reqsPath := filepath.Join(g.tmpDir, "requirements.txt")
-	if err := os.MkdirAll(filepath.Dir(reqsPath), 0o755); err != nil {
-		return "", fmt.Errorf("Failed to write %s: %w", reqsPath, err)
-	}
+	reqsPath := filepath.Join(g.relativeTmpDir, "requirements.txt")
 	if err := os.WriteFile(reqsPath, []byte(reqsString), 0644); err != nil {
 		return "", fmt.Errorf("Failed to write requirements to %s: %w", reqsPath, err)
 	}
