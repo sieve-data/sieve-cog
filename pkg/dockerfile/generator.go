@@ -239,7 +239,7 @@ func (g *Generator) pythonRequirements() (string, error) {
 		return "", nil
 	}
 	reqsString := strings.Join(reqs, "\n")
-	reqsPath := "/tmp/requirements.txt"
+	reqsPath := filepath.Join(g.tmpDir, "requirements.txt")
 	if err := os.WriteFile(reqsPath, []byte(reqsString), 0644); err != nil {
 		return "", fmt.Errorf("Failed to write requirements to %s: %w", reqsPath, err)
 	}
