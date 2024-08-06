@@ -21,10 +21,7 @@ func TestGenerate(t *testing.T) {
 		},
 	}
 
-	tmpDir := filepath.Join(os.TempDir(), "cog_test_tmp")
-	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	tmpDir := t.TempDir()
 	barFilePath := filepath.Join(tmpDir, "bar.txt")
 	err := os.WriteFile(barFilePath, []byte(""), 0o644)
 	if err != nil {

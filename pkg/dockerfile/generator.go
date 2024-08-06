@@ -238,13 +238,17 @@ func (g *Generator) pythonRequirements() (string, error) {
 		return "", nil
 	}
 	reqsString := strings.Join(reqs, "\n")
-	reqsPath := filepath.Join(g.relativeTmpDir, "requirements.txt")
+	reqsPath := filepath.Join(g.tmpDir, "requirements.txt")
+	reqsRelPath := filepath.Join(g.relativeTmpDir, "requirements.txt")
+	if err := os.MkdirAll(filepath.Dir(reqsPath), 0o755); err != nil {
+		return "", fmt.Errorf("Failed to write %s: %w", reqsPath, err)
+	}
 	if err := os.WriteFile(reqsPath, []byte(reqsString), 0644); err != nil {
 		return "", fmt.Errorf("Failed to write requirements to %s: %w", reqsPath, err)
 	}
 
 	return fmt.Sprintf(`COPY %s /tmp/requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqsPath), nil
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqsRelPath), nil
 }
 
 func (g *Generator) CogSHA256() string {
