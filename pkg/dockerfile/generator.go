@@ -77,10 +77,10 @@ func (g *Generator) GenerateBase() (string, error) {
 		return "", err
 	}
 
-	pipInstalls, err := g.pipInstalls()
-	if err != nil {
-		return "", err
-	}
+	// pipInstalls, err := g.pipInstalls()
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	run, err := g.run()
 	if err != nil {
@@ -95,7 +95,6 @@ func (g *Generator) GenerateBase() (string, error) {
 		installPython,
 		g.installCython(),
 		aptInstalls,
-		pipInstalls,
 		pythonRequirements,
 		run,
 		g.installSieve(),
@@ -240,6 +239,9 @@ func (g *Generator) pythonRequirements() (string, error) {
 	}
 	reqsString := strings.Join(reqs, "\n")
 	reqsPath := filepath.Join(g.tmpDir, "requirements.txt")
+	if err := os.MkdirAll(filepath.Dir(reqsPath), 0o755); err != nil {
+		return "", fmt.Errorf("Failed to write %s: %w", reqsPath, err)
+	}
 	if err := os.WriteFile(reqsPath, []byte(reqsString), 0644); err != nil {
 		return "", fmt.Errorf("Failed to write requirements to %s: %w", reqsPath, err)
 	}
