@@ -233,13 +233,19 @@ func (g *Generator) installSieve() string {
 }
 
 func (g *Generator) pythonRequirements() (string, error) {
-	reqs := g.Config.Build.PythonRequirements
+	reqs := g.Config.Build.PythonPackages
 
-	if reqs == "" {
+	if len(reqs) == 0 {
 		return "", nil
 	}
+	reqsString := strings.Join(reqs, "\n")
+	reqsPath := "/tmp/requirements.txt"
+	if err := os.WriteFile(reqsPath, []byte(reqsString), 0644); err != nil {
+		return "", fmt.Errorf("Failed to write requirements to %s: %w", reqsPath, err)
+	}
+
 	return fmt.Sprintf(`COPY %s /tmp/requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqs), nil
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt`, reqsPath), nil
 }
 
 func (g *Generator) CogSHA256() string {
