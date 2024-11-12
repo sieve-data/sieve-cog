@@ -255,10 +255,10 @@ func versionGreater(a string, b string) (bool, error) {
 	return aVer.Greater(bVer), nil
 }
 
-func CUDABaseImageFor(cuda string, cuDNN string) (string, error) {
+func CUDABaseImageFor(cuda string, cuDNN string, systemVersion string) (string, error) {
 	var images []CUDABaseImage
 	for _, image := range CUDABaseImages {
-		if version.Matches(cuda, image.CUDA) && image.CuDNN == cuDNN {
+		if version.Matches(cuda, image.CUDA) && image.CuDNN == cuDNN && (systemVersion == "" || image.Ubuntu == systemVersion) {
 			images = append(images, image)
 		}
 	}
@@ -269,6 +269,9 @@ func CUDABaseImageFor(cuda string, cuDNN string) (string, error) {
 	sort.Slice(images, func(i, j int) bool {
 		if images[i].CUDA != images[j].CUDA {
 			return version.MustVersion(images[i].CUDA).Greater(version.MustVersion(images[j].CUDA))
+		}
+		if images[i].Ubuntu == systemVersion {
+			return true
 		}
 		return images[i].Ubuntu > images[j].Ubuntu
 	})
