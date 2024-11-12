@@ -73,11 +73,6 @@
           "type": "string",
           "description": "A pip requirements file specifying the Python packages to install."
         },
-        "system_version": {
-          "$id": "#/properties/build/properties/system_version",
-          "type": "string",
-          "description": "System Version"
-        },
         "system_packages": {
           "$id": "#/properties/build/properties/system_packages",
           "type": [
@@ -163,6 +158,11 @@
       "$id": "#/properties/predict",
       "type": "string",
       "description": "The pointer to the `Predictor` object in your code, which defines how predictions are run on your model."
+    },
+    "system_version": {
+      "$id": "#/properties/build/properties/system_version",
+      "type": "string",
+      "description": "System Version"
     },
     "train": {
       "$id": "#/properties/train",
