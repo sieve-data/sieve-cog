@@ -63,10 +63,11 @@ type Example struct {
 }
 
 type Config struct {
-	Build   *Build `json:"build" yaml:"build"`
-	Image   string `json:"image,omitempty" yaml:"image"`
-	Predict string `json:"predict,omitempty" yaml:"predict"`
-	Train   string `json:"train,omitempty" yaml:"train"`
+	SystemVersion string `json:"system_version,omitempty" yaml:"system_version"`
+	Build         *Build `json:"build" yaml:"build"`
+	Image         string `json:"image,omitempty" yaml:"image"`
+	Predict       string `json:"predict,omitempty" yaml:"predict"`
+	Train         string `json:"train,omitempty" yaml:"train"`
 }
 
 func DefaultConfig() *Config {
@@ -170,7 +171,7 @@ func FromYAML(contents []byte) (*Config, error) {
 }
 
 func (c *Config) CUDABaseImageTag() (string, error) {
-	return CUDABaseImageFor(c.Build.CUDA, c.Build.CuDNN)
+	return CUDABaseImageFor(c.Build.CUDA, c.Build.CuDNN, c.SystemVersion)
 }
 
 func (c *Config) TorchVersion() (string, bool) {
